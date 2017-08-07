@@ -4,26 +4,46 @@ using System.Data.Entity;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security;
 using IdentityFrameworkExample.Models;
+using SendGrid.Helpers.Mail;
+using SendGrid;
+using System.Configuration;
 
 namespace IdentityFrameworkExample
 {
     public class EmailService : IIdentityMessageService
     {
-        public Task SendAsync(IdentityMessage message)
+        public async Task SendAsync(IdentityMessage message)
         {
             // Plug in your email service here to send an email.
-            return Task.FromResult(0);
+            await configSendGridasync(message);
+        }
+
+        private async Task configSendGridasync(IdentityMessage message)
+        {        
+            var apiKey = ConfigurationManager.AppSettings["apiKey"];
+            var client = new SendGridClient(apiKey);
+            var msg = new SendGridMessage()
+            {
+                From = new EmailAddress("test@example.com", "IE Team"),
+                Subject = message.Subject,
+                PlainTextContent = message.Body,
+                HtmlContent = message.Body
+            };
+
+            // Send the email.
+            msg.AddTo(message.Destination);
+            var response = await client.SendEmailAsync(msg);       
         }
     }
 
-    public class SmsService : IIdentityMessageService
+
+    public class SmsService : IIdentityMessageService // This is some super cool code! If we can get it working! ;)
     {
         public Task SendAsync(IdentityMessage message)
         {
